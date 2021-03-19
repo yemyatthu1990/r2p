@@ -4,9 +4,11 @@ import 'detailpage.dart';
 import 'info.dart';
 
 class ListPage extends StatefulWidget {
-  ListPage({Key key, this.title}) : super(key: key);
+  ListPage({Key key, this.title, this.subCat, this.detail}) : super(key: key);
 
   final String title;
+  final List<Object> subCat;
+  final Map detail;
 
   @override
   _ListPageState createState() => _ListPageState();
@@ -28,12 +30,12 @@ class _ListPageState extends State<ListPage> {
       ],
     );
 
-      ListTile makeListTile(Info info) => ListTile(
+      ListTile makeListTile(Info info, Map subcatobj) => ListTile(
         onTap: () {
            Navigator.push(
                 context,
                 MaterialPageRoute(
-                    builder: (context) => DetailPage(info: info)));
+                    builder: (context) => DetailPage(detail: widget.detail[subcatobj["id"]],)));
         },
         contentPadding: EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
         leading: Container(
@@ -44,7 +46,7 @@ class _ListPageState extends State<ListPage> {
           child: Icon(Icons.add_moderator, color: Colors.white),
         ),
         title: Text(
-          info.title,
+          subcatobj["name"],
           style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
         // subtitle: Text("Intermediate", style: TextStyle(color: Colors.white)),
@@ -57,12 +59,12 @@ class _ListPageState extends State<ListPage> {
         ),*/
         trailing:
             Icon(Icons.keyboard_arrow_right, color: Colors.white, size: 30.0));
-         Card makeCard(Info info) => Card(
+         Card makeCard(Info info, Map subcatobj) => Card(
       elevation: 8.0,
       margin: new EdgeInsets.symmetric(horizontal: 10.0, vertical: 6.0),
       child: Container(
         decoration: BoxDecoration(color: Colors.red),
-        child: makeListTile(info),
+        child: makeListTile(info, subcatobj),
       ),
     );
 
@@ -70,9 +72,10 @@ class _ListPageState extends State<ListPage> {
       child: ListView.builder(
         scrollDirection: Axis.vertical,
         shrinkWrap: true,
-        itemCount: 10,
+        itemCount: widget.subCat.length,
         itemBuilder: (BuildContext context, int index) {
-          return makeCard(info);
+          Map subcatobj = widget.subCat[index] as Map;
+          return makeCard(info, subcatobj);
         },
       ),
     );

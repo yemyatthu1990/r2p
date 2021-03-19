@@ -1,52 +1,47 @@
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_html/flutter_html.dart';
+import 'package:flutter_html/style.dart';
 
 import 'info.dart';
 
 class DetailPage extends StatelessWidget {
-  final Info info;
+  final Map detail;
 
-  DetailPage({Key key, this.info}) : super(key: key);
+  DetailPage({Key key, this.detail}) : super(key: key);
   @override
   Widget build(BuildContext context) {
      final topContentText = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        SizedBox(height: 120.0),
-        Icon(
-          Icons.directions_car,
-          color: Colors.white,
-          size: 40.0,
-        ),
-        Container(
-          width: 90.0,
-          child: new Divider(color: Colors.green),
-        ),
-        SizedBox(height: 10.0),
-        Text(
-          info.title,
-          style: TextStyle(color: Colors.white, fontSize: 45.0),
-        ),
+        SizedBox(height: 30.0),
+        Padding( padding: EdgeInsets.only(left: 10, right: 10),child:Html(
+          data: detail["body"],
+          style: {
+            "h4": Style(
+              lineHeight: LineHeight(2),
+              fontSize: FontSize(20)
+            ),
+            "li": Style(
+              lineHeight: LineHeight(2),
+              fontSize: FontSize(18)
+            )
+          },
+        )),
         SizedBox(height: 30.0),
       ],
     );
 
-     final bottomContentText = Text(
-      "Test",
-      style: TextStyle(fontSize: 18.0),
-    );
-
 final topContent = Container(
       child:
-        Expanded(
-
-          child: CachedNetworkImage(
-        imageUrl: info.pictureUrl,
+      (detail["image"] != null)?
+      CachedNetworkImage(
+        imageUrl: detail["image"],
         placeholder: (context, url) => CircularProgressIndicator(),
         errorWidget: (context, url, error) => Icon(Icons.error),
-     ),
-        ),
+     ): Container(),
+
 
     );
     final topAppBar = AppBar(
@@ -63,25 +58,13 @@ final topContent = Container(
 
      return Scaffold(
        appBar: topAppBar,
-      body: ListView(
-        children: noteWidgets(topContent,info.notes),
-      ),
-    );
-  }
 
-  List<Widget> noteWidgets(Widget topContent, List<String> notes) {
-    //
-    List<Widget> noteWidgets = new List();
-    noteWidgets.add(topContent);
-    print(notes.length);
-    for (var i=0; i< notes.length; i++) {
-      print(i);
-      print(notes[i]);
-      noteWidgets.add(ListTile(
-        leading: Icon(Icons.fiber_manual_record),
-        title: Text(notes[i]),
-      ));
-    }
-    return noteWidgets;
-  }
+    body: SizedBox ( height: MediaQuery.of(context).size.height, child: new ListView(
+      shrinkWrap: true,
+      children: <Widget>[
+        topContent, topContentText
+      ],
+    )
+));}
+
 }
