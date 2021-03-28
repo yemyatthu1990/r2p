@@ -4,5 +4,5 @@ class Info {
   List<String> notes;
 
   Info(
-      {this.pictureUrl, this.title, this.notes});
+      {required this.pictureUrl,required  this.title,required this.notes});
 }

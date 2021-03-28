@@ -1,14 +1,19 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:myanmar_emergency/detail.dart';
+import 'package:myanmar_emergency/sub_category.dart';
+import 'package:myanmar_emergency/sub_category_dao.dart';
 
+import 'detail_dao.dart';
 import 'detailpage.dart';
 import 'info.dart';
 
 class ListPage extends StatefulWidget {
-  ListPage({Key key, this.title, this.subCat, this.detail}) : super(key: key);
-
+  ListPage({Key? key, required this.catId, required this.title, required this.subCategoryDao, required this.detailDao}) : super(key: key);
+  final catId;
   final String title;
-  final List<Object> subCat;
-  final Map detail;
+  final SubCategoryDao subCategoryDao;
+  final DetailDao detailDao;
 
   @override
   _ListPageState createState() => _ListPageState();
@@ -22,31 +27,28 @@ class _ListPageState extends State<ListPage> {
       elevation: 0.1,
       backgroundColor: Colors.red,
       title: Text(widget.title),
-      actions: <Widget>[
-        IconButton(
-          icon: Icon(Icons.list),
-          onPressed: () {},
-        )
-      ],
     );
 
-      ListTile makeListTile(Info info, Map subcatobj) => ListTile(
+      ListTile makeListTile(Info info, SubCategory subcatobj) => ListTile(
         onTap: () {
-           Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (context) => DetailPage(detail: widget.detail[subcatobj["id"]],)));
+          widget.detailDao.getDetail(subcatobj.catId+subcatobj.id).then((value) =>
+              Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => DetailPage(detail:value ?? Detail("", "", "", ""), title: subcatobj.name,)))
+          );
+
         },
-        contentPadding: EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
+          contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
         leading: Container(
-          padding: EdgeInsets.only(right: 12.0),
+          padding: EdgeInsets.only(right: 8.0),
           decoration: new BoxDecoration(
               border: new Border(
                   right: new BorderSide(width: 1.0, color: Colors.white24))),
-          child: Icon(Icons.add_moderator, color: Colors.white),
+          child:Column(mainAxisAlignment: MainAxisAlignment.center, children:[SizedBox( width: 35, height: 35, child: ((subcatobj.icon).length > 0)? CachedNetworkImage(imageUrl: subcatobj.icon)  : Container())]),
         ),
         title: Text(
-          subcatobj["name"],
+          subcatobj.name,
           style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
         // subtitle: Text("Intermediate", style: TextStyle(color: Colors.white)),
@@ -59,8 +61,7 @@ class _ListPageState extends State<ListPage> {
         ),*/
         trailing:
             Icon(Icons.keyboard_arrow_right, color: Colors.white, size: 30.0));
-         Card makeCard(Info info, Map subcatobj) => Card(
-      elevation: 8.0,
+         Card makeCard(Info info, SubCategory subcatobj) => Card(
       margin: new EdgeInsets.symmetric(horizontal: 10.0, vertical: 6.0),
       child: Container(
         decoration: BoxDecoration(color: Colors.red),
@@ -69,15 +70,20 @@ class _ListPageState extends State<ListPage> {
     );
 
        Container makeBody(Info info) => Container(
-      child: ListView.builder(
+      child: StreamBuilder<List<SubCategory>> (
+        stream: widget.subCategoryDao.getSubCategoriesAsStream(widget.catId),
+          builder: (_, snapshot) {
+       if (!snapshot.hasData) return Container();
+
+       final data = snapshot.requireData;
+       return ListView.builder(
         scrollDirection: Axis.vertical,
         shrinkWrap: true,
-        itemCount: widget.subCat.length,
+        itemCount: data.length,
         itemBuilder: (BuildContext context, int index) {
-          Map subcatobj = widget.subCat[index] as Map;
-          return makeCard(info, subcatobj);
+          return makeCard(info, data[index]);
         },
-      ),
+      );}),
     );
 
 

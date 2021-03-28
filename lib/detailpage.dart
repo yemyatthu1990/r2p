@@ -3,13 +3,15 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:flutter_html/style.dart';
+import 'package:myanmar_emergency/detail.dart';
+import 'package:myanmar_emergency/fullscreenimage.dart';
 
 import 'info.dart';
 
 class DetailPage extends StatelessWidget {
-  final Map detail;
-
-  DetailPage({Key key, this.detail}) : super(key: key);
+  final Detail detail;
+  final String title;
+  DetailPage({Key? key, required this.title,required this.detail}) : super(key: key);
   @override
   Widget build(BuildContext context) {
      final topContentText = Column(
@@ -17,7 +19,7 @@ class DetailPage extends StatelessWidget {
       children: <Widget>[
         SizedBox(height: 30.0),
         Padding( padding: EdgeInsets.only(left: 10, right: 10),child:Html(
-          data: detail["body"],
+          data: detail.body,
           style: {
             "h4": Style(
               lineHeight: LineHeight(2),
@@ -26,6 +28,10 @@ class DetailPage extends StatelessWidget {
             "li": Style(
               lineHeight: LineHeight(2),
               fontSize: FontSize(18)
+            ),
+            "p": Style(
+              lineHeight: LineHeight(2),
+                fontSize: FontSize(18)
             )
           },
         )),
@@ -34,26 +40,28 @@ class DetailPage extends StatelessWidget {
     );
 
 final topContent = Container(
-      child:
-      (detail["image"] != null)?
+      child: InkWell (
+      onTap: (){
+        if ((detail.image != null && (detail.image as String).length > 0)) {
+          Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (context) => FullScreenImage(imageUrl:detail.image, )));
+        }
+      },
+          child: (detail.image != null && (detail.image as String).length > 0)?
       CachedNetworkImage(
-        imageUrl: detail["image"],
-        placeholder: (context, url) => CircularProgressIndicator(),
+        imageUrl: detail.image,
+        placeholder: (context, url) => Center( child: Padding( padding: EdgeInsets.all(10), child:SizedBox(width: 50, height: 50,child:CircularProgressIndicator()))),
         errorWidget: (context, url, error) => Icon(Icons.error),
-     ): Container(),
+     ): Container()),
 
 
     );
     final topAppBar = AppBar(
       elevation: 0.1,
-      backgroundColor: Color.fromRGBO(58, 66, 86, 1.0),
-      title: Text("Detail"),
-      actions: <Widget>[
-        IconButton(
-          icon: Icon(Icons.list),
-          onPressed: () {},
-        )
-      ],
+      backgroundColor: Colors.red,
+      title: Text(title),
     );
 
      return Scaffold(
