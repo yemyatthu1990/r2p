@@ -7,6 +7,6 @@ abstract class DetailDao {
   @Query('SELECT * FROM Detail WHERE catSubCatId = :catSubCatId')
   Future<Detail?> getDetail(String catSubCatId);
 
-  @insert
+  @Insert(onConflict: OnConflictStrategy.replace)
   Future<void> insertDetail(Detail detail);
 }

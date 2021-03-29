@@ -60,7 +60,7 @@ final topContent = Container(
     );
     final topAppBar = AppBar(
       elevation: 0.1,
-      backgroundColor: Colors.red,
+      backgroundColor: Colors.blue,
       title: Text(title),
     );
 

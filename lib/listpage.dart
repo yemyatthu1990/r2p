@@ -25,7 +25,7 @@ class _ListPageState extends State<ListPage> {
   Widget build(BuildContext context) {
       final topAppBar = AppBar(
       elevation: 0.1,
-      backgroundColor: Colors.red,
+      backgroundColor: Colors.blue,
       title: Text(widget.title),
     );
 
@@ -64,7 +64,7 @@ class _ListPageState extends State<ListPage> {
          Card makeCard(Info info, SubCategory subcatobj) => Card(
       margin: new EdgeInsets.symmetric(horizontal: 10.0, vertical: 6.0),
       child: Container(
-        decoration: BoxDecoration(color: Colors.red),
+        decoration: BoxDecoration(color: Colors.blue),
         child: makeListTile(info, subcatobj),
       ),
     );

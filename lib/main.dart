@@ -1,3 +1,5 @@
+
+// @dart=2.9
 import 'dart:io';
 
 import 'package:firebase_core/firebase_core.dart';
@@ -14,8 +16,8 @@ Future<void> main() async {
 
   final  appDatabase = await $FloorAppDatabase.databaseBuilder(
       "app_database.db").build();
-  final imageDatabase = await $FloorImageDatabase.databaseBuilder("libCachedImageData.db")
-      .build();
+  /*final imageDatabase = await $FloorImageDatabase.databaseBuilder("libCachedImageData.db")
+      .build();*/
   final categoryDao = appDatabase.categoryDao;
   final subCategoryDao = appDatabase.subCategoryDao;
   final detailDao = appDatabase.detailDao;
@@ -25,7 +27,6 @@ Future<void> main() async {
       home: CategoryPage(categoryDao: categoryDao, subCategoryDao: subCategoryDao, detailDao: detailDao),
     ));
   } on  Exception catch(_) {
-    print("error");
   }
 
 

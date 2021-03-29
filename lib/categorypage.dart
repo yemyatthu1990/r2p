@@ -43,23 +43,27 @@ class _CategoryPageState extends State<CategoryPage> {
         _detailRef = database.reference().child("detail");
         
         _categoryRef?.once().then((DataSnapshot snapshot) {
+          if (snapshot.value != null) {
+            widget.categoryDao.deleteAll();
+          }
           (snapshot.value as List<Object>).forEach((element) {
             var cat = new Category((element as Map)["id"], (element)["name"]);
             widget.categoryDao.insertCategory(cat);
           });
         });
         _subcategoryRef?.once().then((DataSnapshot snapshot) {
+          if (snapshot.value != null) {
+            widget.subCategoryDao.deleteAll();
+          }
           (snapshot.value as Map).forEach((key, value) {
             List<Object> subcatObjs = value;
             subcatObjs.forEach((element) {
-              var subcatMap = (element as Map);
-              SubCategory subCategory = new SubCategory(subcatMap["id"], subcatMap["icon"],subcatMap["name"],key);
-              widget.subCategoryDao.insertSubCategory(subCategory);
-              ImageDownloader.downloadImage(subCategory.icon, destination: AndroidDestinationType.(directory: directory).custom(directory: "cache")
-
-              ..subDirectory(subDirectory)).then((value) => {
-
-              });
+              if (element != null) {
+                var subcatMap = (element as Map);
+                SubCategory subCategory = new SubCategory(
+                    subcatMap["id"], subcatMap["icon"], subcatMap["name"], key);
+                widget.subCategoryDao.insertSubCategory(subCategory);
+              }
             });
             setState(() {
               subCatDownloaded = true;
@@ -69,13 +73,9 @@ class _CategoryPageState extends State<CategoryPage> {
         });
         _detailRef?.once().then((DataSnapshot snapshot) {
           (snapshot.value as Map).forEach((key, value) {
-            print(key);
-            print(value);
             String catId = key;
             Map subCatDetailMap = value;
             subCatDetailMap.forEach((subKey, subValue) {
-              print(subKey);
-              print(subValue);
               Map subValueMap = subValue;
               Detail detail = new Detail(subValueMap["id"], catId+subKey,subValueMap["image"], subValueMap["body"]);
               widget.detailDao.insertDetail(detail);
@@ -93,7 +93,7 @@ class _CategoryPageState extends State<CategoryPage> {
 
   final topAppBar = AppBar(
     elevation: 0.1,
-    backgroundColor: Colors.red,
+    backgroundColor: Colors.blue,
     title: Text("R2P"),
   );
   Container makeBody(BuildContext context) => Container(
@@ -122,7 +122,7 @@ class _CategoryPageState extends State<CategoryPage> {
              //
              // subcat = (subcategories??{}[category["id"]]) as List<Object>?;
         return Card(
-          color: Colors.red,
+          color: Colors.blue,
           child: InkWell(
               onTap: () {
                 Navigator.push(
