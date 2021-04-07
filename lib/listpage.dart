@@ -1,8 +1,12 @@
+
+import 'dart:io';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:myanmar_emergency/detail.dart';
 import 'package:myanmar_emergency/sub_category.dart';
 import 'package:myanmar_emergency/sub_category_dao.dart';
+import 'package:path_provider/path_provider.dart';
 
 import 'detail_dao.dart';
 import 'detailpage.dart';
@@ -31,11 +35,23 @@ class _ListPageState extends State<ListPage> {
 
       ListTile makeListTile(Info info, SubCategory subcatobj) => ListTile(
         onTap: () {
-          widget.detailDao.getDetail(subcatobj.catId+subcatobj.id).then((value) =>
-              Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => DetailPage(detail:value ?? Detail("", "", "", ""), title: subcatobj.name,)))
+          var imagePath = "";
+          widget.detailDao.getDetail(subcatobj.catId+subcatobj.id).then((detailValue) =>
+
+          getExternalStorageDirectory().then((dir) =>
+          {
+
+            if (detailValue?.image.isNotEmpty??false) {
+              imagePath = (dir?.path??"") + Platform.pathSeparator+"cache"+Platform.pathSeparator+(detailValue?.image??""),
+              print(imagePath)
+              },
+
+            Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => DetailPage(detail:detailValue ?? Detail("", "", "", ""), title: subcatobj.name, imagePath: imagePath)))
+          })
+
           );
 
         },

@@ -39,7 +39,8 @@ class _CategoryPageState extends State<CategoryPage> {
     for (var url in imageUrls) {
       try {
         await ImageDownloader.downloadImage(url, destination: AndroidDestinationType.custom(directory: "cache")
-            ..inExternalFilesDir()
+        ..subDirectory(url)
+          ..inExternalFilesDir()
         );
       } catch (error) {
         print(error);
