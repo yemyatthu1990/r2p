@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:data_connection_checker/data_connection_checker.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -6,6 +7,7 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:floor/floor.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:image_downloader/image_downloader.dart';
 import 'package:myanmar_emergency/category.dart';
 import 'package:myanmar_emergency/category_dao.dart';
@@ -32,7 +34,19 @@ class _CategoryPageState extends State<CategoryPage> {
   DatabaseReference? _detailRef;
   bool detailDownloaded = false;
   bool subCatDownloaded =false;
-
+  bool imagesDownloaded = false;
+  Future<bool> downloadAllImages(List<String> imageUrls) async {
+    for (var url in imageUrls) {
+      try {
+        await ImageDownloader.downloadImage(url, destination: AndroidDestinationType.custom(directory: "cache")
+            ..inExternalFilesDir()
+        );
+      } catch (error) {
+        print(error);
+      }
+    }
+    return true;
+  }
     void initState() {
     super.initState();
 
@@ -55,11 +69,7 @@ class _CategoryPageState extends State<CategoryPage> {
               var subcatMap = (element as Map);
               SubCategory subCategory = new SubCategory(subcatMap["id"], subcatMap["icon"],subcatMap["name"],key);
               widget.subCategoryDao.insertSubCategory(subCategory);
-              ImageDownloader.downloadImage(subCategory.icon, destination: AndroidDestinationType.(directory: directory).custom(directory: "cache")
 
-              ..subDirectory(subDirectory)).then((value) => {
-
-              });
             });
             setState(() {
               subCatDownloaded = true;
@@ -67,27 +77,28 @@ class _CategoryPageState extends State<CategoryPage> {
 
           });
         });
+        List<String> urls = [];
         _detailRef?.once().then((DataSnapshot snapshot) {
           (snapshot.value as Map).forEach((key, value) {
-            print(key);
-            print(value);
             String catId = key;
             Map subCatDetailMap = value;
             subCatDetailMap.forEach((subKey, subValue) {
-              print(subKey);
-              print(subValue);
               Map subValueMap = subValue;
               Detail detail = new Detail(subValueMap["id"], catId+subKey,subValueMap["image"], subValueMap["body"]);
               widget.detailDao.insertDetail(detail);
+              print("url: "+detail.image);
+              if (detail.image.isNotEmpty) {
+                urls.add(detail.image);
+              }
             });
-
+            downloadAllImages(urls)
+            .then((value) => {
+              if (value) setState(() {
+                imagesDownloaded = true;
+              })
+            });
           });
         });
-        database.setPersistenceEnabled(true);
-        database.setPersistenceCacheSizeBytes(10000000000000);
-        _categoryRef?.keepSynced(true);
-        _subcategoryRef?.keepSynced(true);
-        _detailRef?.keepSynced(true);
 
     }
 
@@ -99,8 +110,8 @@ class _CategoryPageState extends State<CategoryPage> {
   Container makeBody(BuildContext context) => Container(
     color: Colors.white,
       child: StreamBuilder<List<Category>> ( stream: widget.categoryDao.getAllCategoriesAsStream(), builder: (_, snapshot) {
-  if (!snapshot.hasData) return Center(child: Text("အင်တာနက် မလိုဘဲ အသုံးပြုနိုင်ရန်\n ပြင်ဆင်နေပါသည်။", style: TextStyle(fontSize: 20), textAlign: TextAlign.center,));
-
+  if (!imagesDownloaded) return Center(child: Text("အင်တာနက် မလိုဘဲ အသုံးပြုနိုင်ရန်\n ပြင်ဆင်နေပါသည်။", style: TextStyle(fontSize: 20), textAlign: TextAlign.center,));
+  else {
   final data = snapshot.requireData;
   return GridView.builder(
         padding: EdgeInsets.fromLTRB(20, MediaQuery.of(context).size.height/(4/0.75), 20, 0),
@@ -114,13 +125,7 @@ class _CategoryPageState extends State<CategoryPage> {
       ),
            itemBuilder: (BuildContext context, int index) {
              Category? category;
-             Map? detail;
-             List<Object>? subcat;
              category = data.elementAt(index);
-             //
-             // detail = (details??{}[category["id"]]) as Map;
-             //
-             // subcat = (subcategories??{}[category["id"]]) as List<Object>?;
         return Card(
           color: Colors.red,
           child: InkWell(
@@ -133,7 +138,7 @@ class _CategoryPageState extends State<CategoryPage> {
               child: Center(child: Text( category.name, style: TextStyle(fontSize: 20, color: Colors.white),textAlign: TextAlign.center))),
         );
       }
-      );})
+      );}})
     );
   @override
   Widget build(BuildContext context) {
