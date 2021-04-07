@@ -13,6 +13,9 @@ abstract class CategoryDao {
   @Query('SELECT * FROM Category WHERE id = :id')
   Stream<Category?> getCategoryById(String id);
 
+  @Query('DELETE FROM Category')
+  Future<void> deleteAll();
+
   @insert
   Future<void> insertCategory(Category category);
 }

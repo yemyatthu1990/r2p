@@ -58,18 +58,28 @@ class _CategoryPageState extends State<CategoryPage> {
         _detailRef = database.reference().child("detail");
         
         _categoryRef?.once().then((DataSnapshot snapshot) {
+          if (snapshot.value != null) {
+            widget.categoryDao.deleteAll();
+          }
           (snapshot.value as List<Object>).forEach((element) {
             var cat = new Category((element as Map)["id"], (element)["name"]);
             widget.categoryDao.insertCategory(cat);
           });
         });
         _subcategoryRef?.once().then((DataSnapshot snapshot) {
+          if (snapshot.value != null) {
+            widget.subCategoryDao.deleteAll();
+          }
           (snapshot.value as Map).forEach((key, value) {
             List<Object> subcatObjs = value;
             subcatObjs.forEach((element) {
-              var subcatMap = (element as Map);
-              SubCategory subCategory = new SubCategory(subcatMap["id"], subcatMap["icon"],subcatMap["name"],key);
-              widget.subCategoryDao.insertSubCategory(subCategory);
+
+              if (element != null) {
+                var subcatMap = (element as Map);
+                SubCategory subCategory = new SubCategory(
+                    subcatMap["id"], subcatMap["icon"], subcatMap["name"], key);
+                widget.subCategoryDao.insertSubCategory(subCategory);
+              }
 
             });
             setState(() {
@@ -105,7 +115,7 @@ class _CategoryPageState extends State<CategoryPage> {
 
   final topAppBar = AppBar(
     elevation: 0.1,
-    backgroundColor: Colors.red,
+    backgroundColor: Colors.blue,
     title: Text("R2P"),
   );
   Container makeBody(BuildContext context) => Container(
@@ -128,7 +138,7 @@ class _CategoryPageState extends State<CategoryPage> {
              Category? category;
              category = data.elementAt(index);
         return Card(
-          color: Colors.red,
+          color: Colors.blue,
           child: InkWell(
               onTap: () {
                 Navigator.push(

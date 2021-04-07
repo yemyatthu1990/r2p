@@ -158,6 +158,11 @@ class _$CategoryDao extends CategoryDao {
   }
 
   @override
+  Future<void> deleteAll() async {
+    await _queryAdapter.queryNoReturn('DELETE FROM Category');
+  }
+
+  @override
   Future<void> insertCategory(Category category) async {
     await _categoryInsertionAdapter.insert(category, OnConflictStrategy.abort);
   }
@@ -197,6 +202,11 @@ class _$SubCategoryDao extends SubCategoryDao {
         arguments: [catId],
         queryableName: 'SubCategory',
         isView: false);
+  }
+
+  @override
+  Future<void> deleteAll() async {
+    await _queryAdapter.queryNoReturn('DELETE FROM SubCategory');
   }
 
   @override
@@ -240,6 +250,6 @@ class _$DetailDao extends DetailDao {
 
   @override
   Future<void> insertDetail(Detail detail) async {
-    await _detailInsertionAdapter.insert(detail, OnConflictStrategy.abort);
+    await _detailInsertionAdapter.insert(detail, OnConflictStrategy.replace);
   }
 }
