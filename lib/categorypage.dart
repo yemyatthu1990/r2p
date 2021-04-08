@@ -18,10 +18,11 @@ import 'detail_dao.dart';
 import 'listpage.dart';
 
 class CategoryPage extends StatefulWidget {
-  CategoryPage({Key? key, required this.categoryDao, required this.subCategoryDao, required this.detailDao}) : super(key: key);
+  CategoryPage({Key? key, required this.app ,required this.categoryDao, required this.subCategoryDao, required this.detailDao}) : super(key: key);
   final CategoryDao categoryDao;
   final SubCategoryDao subCategoryDao;
   final DetailDao detailDao;
+  final FirebaseApp app;
   @override
   State<StatefulWidget> createState() => _CategoryPageState();
 }
@@ -36,7 +37,7 @@ class _CategoryPageState extends State<CategoryPage> {
     void initState() {
     super.initState();
 
-    final FirebaseDatabase database = FirebaseDatabase.instance;
+    final FirebaseDatabase database = FirebaseDatabase(app: widget.app);
 
         _categoryRef =database.reference().child('category');
         _subcategoryRef = database.reference().child("subcategories");
@@ -83,8 +84,8 @@ class _CategoryPageState extends State<CategoryPage> {
 
           });
         });
-        database.setPersistenceEnabled(true);
-        database.setPersistenceCacheSizeBytes(10000000000000);
+        database.setPersistenceEnabled(false);
+        database.setPersistenceCacheSizeBytes(0);
         _categoryRef?.keepSynced(true);
         _subcategoryRef?.keepSynced(true);
         _detailRef?.keepSynced(true);

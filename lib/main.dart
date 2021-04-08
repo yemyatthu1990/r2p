@@ -10,7 +10,7 @@ import 'package:myanmar_emergency/image_database.dart';
 import 'appdatabase.dart';
 
 
-
+FirebaseApp app;
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -21,15 +21,34 @@ Future<void> main() async {
   final categoryDao = appDatabase.categoryDao;
   final subCategoryDao = appDatabase.subCategoryDao;
   final detailDao = appDatabase.detailDao;
-  try {
-    runApp(MaterialApp(
-      title: 'R2P',
-      home: CategoryPage(categoryDao: categoryDao, subCategoryDao: subCategoryDao, detailDao: detailDao),
-    ));
-  } on  Exception catch(_) {
-  }
-
-
+    if (Firebase.apps.isEmpty) {
+    app = await Firebase.initializeApp(
+      name: 'db2',
+      options: Platform.isIOS || Platform.isMacOS
+          ? const FirebaseOptions(
+        appId: '1:331181411235:ios:7e2a873fde389398b7a816',
+        apiKey: 'AIzaSyB0_9wk2R6F-Geyv2CNyVNS5skCiZWWEnE',
+        projectId: 'myanmar-emergency',
+        messagingSenderId: '331181411235',
+        databaseURL: 'https://myanmar-emergency-default-rtdb.firebaseio.com',
+      )
+          : const FirebaseOptions(
+          appId: '1:331181411235:android:4ee914ef3259d973b7a816',
+          apiKey: 'AIzaSyBPRjqGImBOUAYugRlB4BxAamo9gA6Rsi0',
+          messagingSenderId: '331181411235',
+          projectId: 'myanmar-emergency',
+          storageBucket: "myanmar-emergency.appspot.com",
+          databaseURL: 'https://myanmar-emergency-default-rtdb.firebaseio.com'
+      ),
+    );
+  } else {
+      app = Firebase.app('db2');
+    }
+  runApp(MaterialApp(
+    title: 'Flutter Database Example',
+    home: CategoryPage( app: app, categoryDao: categoryDao, subCategoryDao: subCategoryDao, detailDao: detailDao),
+  ));
 }
+
 
 
