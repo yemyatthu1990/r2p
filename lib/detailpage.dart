@@ -1,3 +1,4 @@
+import 'dart:io';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
@@ -11,7 +12,8 @@ import 'info.dart';
 class DetailPage extends StatelessWidget {
   final Detail detail;
   final String title;
-  DetailPage({Key? key, required this.title,required this.detail}) : super(key: key);
+  final String imagePath;
+  DetailPage({Key? key, required this.title,required this.detail, required this.imagePath}) : super(key: key);
   @override
   Widget build(BuildContext context) {
      final topContentText = Column(
@@ -46,15 +48,16 @@ final topContent = Container(
           Navigator.push(
               context,
               MaterialPageRoute(
-                  builder: (context) => FullScreenImage(imageUrl:detail.image, )));
+                  builder: (context) => FullScreenImage(imageUrl:imagePath, )));
         }
       },
           child: (detail.image != null && (detail.image as String).length > 0)?
-      CachedNetworkImage(
-        imageUrl: detail.image,
-        placeholder: (context, url) => Center( child: Padding( padding: EdgeInsets.all(10), child:SizedBox(width: 50, height: 50,child:CircularProgressIndicator()))),
-        errorWidget: (context, url, error) => Icon(Icons.error),
-     ): Container()),
+              Image.file(File(imagePath)): Container()),
+     //  CachedNetworkImage(
+     //    imageUrl: detail.image,
+     //    placeholder: (context, url) => Center( child: Padding( padding: EdgeInsets.all(10), child:SizedBox(width: 50, height: 50,child:CircularProgressIndicator()))),
+     //    errorWidget: (context, url, error) => Icon(Icons.error),
+     // ): Container()),
 
 
     );

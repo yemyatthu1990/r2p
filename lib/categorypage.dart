@@ -1,17 +1,20 @@
 import 'dart:convert';
+import 'dart:io';
 
-import 'package:data_connection_checker/data_connection_checker.dart';
+import 'package:connectivity/connectivity.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:floor/floor.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:image_downloader/image_downloader.dart';
 import 'package:myanmar_emergency/category.dart';
 import 'package:myanmar_emergency/category_dao.dart';
 import 'package:myanmar_emergency/detail.dart';
 import 'package:myanmar_emergency/sub_category.dart';
 import 'package:myanmar_emergency/sub_category_dao.dart';
+import 'package:path_provider/path_provider.dart';
 
 import 'appdatabase.dart';
 import 'detail_dao.dart';
@@ -33,7 +36,33 @@ class _CategoryPageState extends State<CategoryPage> {
   DatabaseReference? _detailRef;
   bool detailDownloaded = false;
   bool subCatDownloaded =false;
-
+  bool imagesDownloaded = false;
+  Future<bool> downloadAllImages(List<String> imageUrls) async {
+    print("downloading images");
+    for (var url in imageUrls) {
+      var dir = await getExternalStorageDirectory();
+      var name = url.replaceAll("/", "").replaceAll(" ", "")
+            .replaceAll("?", "").replaceAll("%", "")
+            .replaceAll(":", "")
+            .replaceAll("#", "");
+      var imagePath = (dir?.path ?? "") + Platform.pathSeparator + "cache" +
+          Platform.pathSeparator + name;
+      var fileExist = await File(imagePath).exists();
+      print("images file exist: "+fileExist.toString());
+      if (!fileExist) {
+        try {
+          await ImageDownloader.downloadImage(url,
+              destination: AndroidDestinationType.custom(directory: "cache")
+                ..subDirectory(name)
+                ..inExternalFilesDir()
+          );
+        } catch (error) {
+          print(error);
+        }
+      }
+    }
+    return true;
+  }
     void initState() {
     super.initState();
 
@@ -59,12 +88,14 @@ class _CategoryPageState extends State<CategoryPage> {
           (snapshot.value as Map).forEach((key, value) {
             List<Object> subcatObjs = value;
             subcatObjs.forEach((element) {
+
               if (element != null) {
                 var subcatMap = (element as Map);
                 SubCategory subCategory = new SubCategory(
                     subcatMap["id"], subcatMap["icon"], subcatMap["name"], key);
                 widget.subCategoryDao.insertSubCategory(subCategory);
               }
+
             });
             setState(() {
               subCatDownloaded = true;
@@ -72,6 +103,7 @@ class _CategoryPageState extends State<CategoryPage> {
 
           });
         });
+        List<String> urls = [];
         _detailRef?.once().then((DataSnapshot snapshot) {
           (snapshot.value as Map).forEach((key, value) {
             String catId = key;
@@ -80,28 +112,41 @@ class _CategoryPageState extends State<CategoryPage> {
               Map subValueMap = subValue;
               Detail detail = new Detail(subValueMap["id"], catId+subKey,subValueMap["image"], subValueMap["body"]);
               widget.detailDao.insertDetail(detail);
+              if (detail.image.isNotEmpty) {
+                urls.add(detail.image);
+              }
             });
-
+            downloadAllImages(urls)
+            .then((value) => {
+              setState(() {
+                imagesDownloaded = true;
+              })
+            });
           });
         });
-        database.setPersistenceEnabled(false);
-        database.setPersistenceCacheSizeBytes(0);
-        _categoryRef?.keepSynced(true);
-        _subcategoryRef?.keepSynced(true);
-        _detailRef?.keepSynced(true);
+
+      _categoryRef?.keepSynced(true);
+      _detailRef?.keepSynced(true);
+      _subcategoryRef?.keepSynced(true);
+       Connectivity().checkConnectivity().then((connectivityResult) => {
+         if (connectivityResult == ConnectivityResult.none) {
+           imagesDownloaded = true
+         }
+       }
+       );
 
     }
 
   final topAppBar = AppBar(
     elevation: 0.1,
     backgroundColor: Colors.blue,
-    title: Text("R2P"),
+    title: Text("SRF21"),
   );
   Container makeBody(BuildContext context) => Container(
     color: Colors.white,
       child: StreamBuilder<List<Category>> ( stream: widget.categoryDao.getAllCategoriesAsStream(), builder: (_, snapshot) {
-  if (!snapshot.hasData) return Center(child: Text("အင်တာနက် မလိုဘဲ အသုံးပြုနိုင်ရန်\n ပြင်ဆင်နေပါသည်။", style: TextStyle(fontSize: 20), textAlign: TextAlign.center,));
-
+  if (!imagesDownloaded) return Center(child: Text("အင်တာနက် မလိုဘဲ အသုံးပြုနိုင်ရန်\n ပြင်ဆင်နေပါသည်။", style: TextStyle(fontSize: 20), textAlign: TextAlign.center,));
+  else {
   final data = snapshot.requireData;
   return GridView.builder(
         padding: EdgeInsets.fromLTRB(20, MediaQuery.of(context).size.height/(4/0.75), 20, 0),
@@ -115,13 +160,7 @@ class _CategoryPageState extends State<CategoryPage> {
       ),
            itemBuilder: (BuildContext context, int index) {
              Category? category;
-             Map? detail;
-             List<Object>? subcat;
              category = data.elementAt(index);
-             //
-             // detail = (details??{}[category["id"]]) as Map;
-             //
-             // subcat = (subcategories??{}[category["id"]]) as List<Object>?;
         return Card(
           color: Colors.blue,
           child: InkWell(
@@ -129,12 +168,12 @@ class _CategoryPageState extends State<CategoryPage> {
                 Navigator.push(
                     context,
                     MaterialPageRoute(
-                        builder: (context) => ListPage(title: category?.name ?? "R2P",catId: category?.id ?? "", subCategoryDao: widget.subCategoryDao, detailDao: widget.detailDao, )));
+                        builder: (context) => ListPage(title: category?.name ?? "SRF21",catId: category?.id ?? "", subCategoryDao: widget.subCategoryDao, detailDao: widget.detailDao, )));
               },
               child: Center(child: Text( category.name, style: TextStyle(fontSize: 20, color: Colors.white),textAlign: TextAlign.center))),
         );
       }
-      );})
+      );}})
     );
   @override
   Widget build(BuildContext context) {

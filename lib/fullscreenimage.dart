@@ -1,4 +1,6 @@
-import 'package:cached_network_image/cached_network_image.dart';
+
+import 'dart:io';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:photo_view/photo_view.dart';
@@ -14,8 +16,8 @@ class FullScreenImage extends StatelessWidget {
             height: double.infinity,
             width: double.infinity,
             child: PhotoView(
-              imageProvider: CachedNetworkImageProvider(
-                  imageUrl
+              imageProvider: FileImage(
+                  new File(imageUrl)
               ),
             )
         )

@@ -1,11 +1,10 @@
-
 // @dart=2.9
 import 'dart:io';
 
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:myanmar_emergency/categorypage.dart';
-import 'package:myanmar_emergency/image_database.dart';
 
 import 'appdatabase.dart';
 
@@ -13,15 +12,17 @@ import 'appdatabase.dart';
 FirebaseApp app;
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
+  SystemChrome.setSystemUIOverlayStyle(
+      SystemUiOverlayStyle(statusBarIconBrightness: Brightness.light,
+      statusBarBrightness: Brightness.dark)
+  );
   final  appDatabase = await $FloorAppDatabase.databaseBuilder(
       "app_database.db").build();
-  /*final imageDatabase = await $FloorImageDatabase.databaseBuilder("libCachedImageData.db")
-      .build();*/
+
   final categoryDao = appDatabase.categoryDao;
   final subCategoryDao = appDatabase.subCategoryDao;
   final detailDao = appDatabase.detailDao;
-    if (Firebase.apps.isEmpty) {
+  if (Firebase.apps.isEmpty) {
     app = await Firebase.initializeApp(
       name: 'db2',
       options: Platform.isIOS || Platform.isMacOS
@@ -43,7 +44,7 @@ Future<void> main() async {
     );
   } else {
       app = Firebase.app('db2');
-    }
+  }
   runApp(MaterialApp(
     title: 'Flutter Database Example',
     home: CategoryPage( app: app, categoryDao: categoryDao, subCategoryDao: subCategoryDao, detailDao: detailDao),
