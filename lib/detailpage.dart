@@ -6,6 +6,7 @@ import 'package:flutter_html/flutter_html.dart';
 import 'package:flutter_html/style.dart';
 import 'package:myanmar_emergency/detail.dart';
 import 'package:myanmar_emergency/fullscreenimage.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import 'info.dart';
 
@@ -13,6 +14,8 @@ class DetailPage extends StatelessWidget {
   final Detail detail;
   final String title;
   final String imagePath;
+  void _launchURL(String _url) async =>
+    await canLaunch(_url) ? await launch(_url) : throw 'Could not launch $_url';
   DetailPage({Key? key, required this.title,required this.detail, required this.imagePath}) : super(key: key);
   @override
   Widget build(BuildContext context) {
@@ -21,6 +24,9 @@ class DetailPage extends StatelessWidget {
       children: <Widget>[
         SizedBox(height: 30.0),
         Padding( padding: EdgeInsets.only(left: 10, right: 10),child:Html(
+          onLinkTap: (url) {
+            _launchURL(url);
+          },
           data: detail.body,
           style: {
             "h4": Style(
@@ -40,7 +46,6 @@ class DetailPage extends StatelessWidget {
         SizedBox(height: 30.0),
       ],
     );
-
 final topContent = Container(
       child: InkWell (
       onTap: (){
