@@ -36,17 +36,27 @@ class _ListPageState extends State<ListPage> {
       ListTile makeListTile(Info info, SubCategory subcatobj) => ListTile(
         onTap: () {
           var imagePath = "";
-
+          Future<Directory?> directory;
+          if (Platform.isAndroid) {
+            directory = getExternalStorageDirectory();
+          } else if (Platform.isIOS) {
+            directory = getApplicationDocumentsDirectory();
+          } else {
+            directory = getTemporaryDirectory();
+          }
           widget.detailDao.getDetail(subcatobj.catId+subcatobj.id).then((detailValue) =>
-
-          getExternalStorageDirectory().then((dir) =>
+          directory.then((dir) =>
           {
 
             if (detailValue?.image.isNotEmpty??false) {
 
-              imagePath = (dir?.path??"") + Platform.pathSeparator+"cache"+Platform.pathSeparator+(detailValue?.image??"").replaceAll("/","").replaceAll(" ", "")
-              .replaceAll("?", "").replaceAll("%", "").replaceAll(":", "").replaceAll("#", ""),
-
+                imagePath =
+                    (dir?.path ?? "") + Platform.pathSeparator + "cache" +
+                        Platform.pathSeparator + (detailValue?.image ?? "")
+                        .replaceAll("/", "").replaceAll(" ", "")
+                        .replaceAll("?", "").replaceAll("%", "").replaceAll(
+                        ":", "")
+                        .replaceAll("#", ""),
               print(imagePath)
               },
 

@@ -6,10 +6,11 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:floor/floor.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_downloader/image_downloader.dart';
-import 'package:myanmar_emergency/category.dart';
+import 'package:myanmar_emergency/category.dart' as catego;
 import 'package:myanmar_emergency/category_dao.dart';
 import 'package:myanmar_emergency/detail.dart';
 import 'package:myanmar_emergency/sub_category.dart';
@@ -26,6 +27,7 @@ class CategoryPage extends StatefulWidget {
   final SubCategoryDao subCategoryDao;
   final DetailDao detailDao;
   final FirebaseApp app;
+  final HttpClient _httpClient = HttpClient();
   @override
   State<StatefulWidget> createState() => _CategoryPageState();
 }
@@ -37,8 +39,28 @@ class _CategoryPageState extends State<CategoryPage> {
   bool detailDownloaded = false;
   bool subCatDownloaded =false;
   bool imagesDownloaded = false;
+
+  Future<File> _downloadFile(String url) async {
+    Uri uri = Uri.parse(url);
+
+    HttpClientRequest req = await widget._httpClient.getUrl(uri);
+    HttpClientResponse res = await req.close();
+
+    List<int> bytes = await consolidateHttpClientResponseBytes(res);
+    String tempDir = (await getApplicationDocumentsDirectory()).path;
+    File outputDirectory = File('$tempDir${Platform.pathSeparator}${'cache'}');
+       var name = url.replaceAll("/", "").replaceAll(" ", "")
+            .replaceAll("?", "").replaceAll("%", "")
+            .replaceAll(":", "")
+            .replaceAll("#", "");
+    File outputFile = File('${outputDirectory.path}${Platform.pathSeparator}$name');
+    if (!outputFile.existsSync()) {
+      outputFile.createSync(recursive: true);
+      await outputFile.writeAsBytes(bytes);
+    }
+    return outputFile;
+  }
   Future<bool> downloadAllImages(List<String> imageUrls) async {
-    print("downloading images");
     for (var url in imageUrls) {
       var fileExist = false;
       var name = "";
@@ -64,9 +86,11 @@ class _CategoryPageState extends State<CategoryPage> {
                   ..inExternalFilesDir()
             );
           } else if(Platform.isIOS) {
-             String? imageId = await ImageDownloader.downloadImage(url);
-             String? imagePath = await ImageDownloader.findPath(imageId??"");
+            print("ios downloading image");
+             File imageFile = await _downloadFile(url);
 
+
+            print(imageFile.path);
           }
         } catch (error) {
           print(error);
@@ -89,7 +113,7 @@ class _CategoryPageState extends State<CategoryPage> {
             widget.categoryDao.deleteAll();
           }
           (snapshot.value as List<Object>).forEach((element) {
-            var cat = new Category((element as Map)["id"], (element)["name"]);
+            var cat = new catego.Category((element as Map)["id"], (element)["name"]);
             widget.categoryDao.insertCategory(cat);
           });
         });
@@ -128,13 +152,14 @@ class _CategoryPageState extends State<CategoryPage> {
                 urls.add(detail.image);
               }
             });
-            downloadAllImages(urls)
+
+          });
+          downloadAllImages(urls)
             .then((value) => {
               setState(() {
                 imagesDownloaded = true;
               })
             });
-          });
         });
 
       _categoryRef?.keepSynced(true);
@@ -156,7 +181,7 @@ class _CategoryPageState extends State<CategoryPage> {
   );
   Container makeBody(BuildContext context) => Container(
     color: Colors.white,
-      child: StreamBuilder<List<Category>> ( stream: widget.categoryDao.getAllCategoriesAsStream(), builder: (_, snapshot) {
+      child: StreamBuilder<List<catego.Category>> ( stream: widget.categoryDao.getAllCategoriesAsStream(), builder: (_, snapshot) {
   if (!imagesDownloaded) return Center(child: Text("အင်တာနက် မလိုဘဲ အသုံးပြုနိုင်ရန်\n ပြင်ဆင်နေပါသည်။", style: TextStyle(fontSize: 20), textAlign: TextAlign.center,));
   else {
   final data = snapshot.requireData;
@@ -171,7 +196,7 @@ class _CategoryPageState extends State<CategoryPage> {
             mainAxisSpacing: 10
       ),
            itemBuilder: (BuildContext context, int index) {
-             Category? category;
+             catego.Category? category;
              category = data.elementAt(index);
         return Card(
           color: Colors.blue,
