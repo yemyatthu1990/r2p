@@ -40,22 +40,34 @@ class _CategoryPageState extends State<CategoryPage> {
   Future<bool> downloadAllImages(List<String> imageUrls) async {
     print("downloading images");
     for (var url in imageUrls) {
-      var dir = await getExternalStorageDirectory();
-      var name = url.replaceAll("/", "").replaceAll(" ", "")
+      var fileExist = false;
+      var name = "";
+      if (Platform.isAndroid) {
+        var dir = await getExternalStorageDirectory();
+        var name = url.replaceAll("/", "").replaceAll(" ", "")
             .replaceAll("?", "").replaceAll("%", "")
             .replaceAll(":", "")
             .replaceAll("#", "");
-      var imagePath = (dir?.path ?? "") + Platform.pathSeparator + "cache" +
-          Platform.pathSeparator + name;
-      var fileExist = await File(imagePath).exists();
-      print("images file exist: "+fileExist.toString());
+        var imagePath = (dir?.path ?? "") + Platform.pathSeparator + "cache" +
+            Platform.pathSeparator + name;
+        fileExist = await File(imagePath).exists();
+        print("images file exist: " + fileExist.toString());
+      } else {
+        fileExist = false;
+      }
       if (!fileExist) {
         try {
-          await ImageDownloader.downloadImage(url,
-              destination: AndroidDestinationType.custom(directory: "cache")
-                ..subDirectory(name)
-                ..inExternalFilesDir()
-          );
+          if (Platform.isAndroid) {
+            await ImageDownloader.downloadImage(url,
+                destination: AndroidDestinationType.custom(directory: "cache")
+                  ..subDirectory(name)
+                  ..inExternalFilesDir()
+            );
+          } else if(Platform.isIOS) {
+             String? imageId = await ImageDownloader.downloadImage(url);
+             String? imagePath = await ImageDownloader.findPath(imageId??"");
+
+          }
         } catch (error) {
           print(error);
         }
