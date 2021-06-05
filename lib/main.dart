@@ -46,7 +46,8 @@ Future<void> main() async {
       app = Firebase.app('db2');
   }
   runApp(MaterialApp(
-    title: 'Flutter Database Example',
+    debugShowCheckedModeBanner: false,
+    title: 'SRF21',
     home: CategoryPage( app: app, categoryDao: categoryDao, subCategoryDao: subCategoryDao, detailDao: detailDao),
   ));
 }
