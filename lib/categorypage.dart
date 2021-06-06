@@ -16,6 +16,7 @@ import 'package:myanmar_emergency/detail.dart';
 import 'package:myanmar_emergency/sub_category.dart';
 import 'package:myanmar_emergency/sub_category_dao.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:percent_indicator/linear_percent_indicator.dart';
 
 import 'appdatabase.dart';
 import 'detail_dao.dart';
@@ -49,10 +50,10 @@ class _CategoryPageState extends State<CategoryPage> {
     List<int> bytes = await consolidateHttpClientResponseBytes(res);
     String tempDir = (await getApplicationDocumentsDirectory()).path;
     File outputDirectory = File('$tempDir${Platform.pathSeparator}${'cache'}');
-       var name = url.replaceAll("/", "").replaceAll(" ", "")
-            .replaceAll("?", "").replaceAll("%", "")
-            .replaceAll(":", "")
-            .replaceAll("#", "");
+    var name = url.replaceAll("/", "").replaceAll(" ", "")
+        .replaceAll("?", "").replaceAll("%", "")
+        .replaceAll(":", "")
+        .replaceAll("#", "");
     File outputFile = File('${outputDirectory.path}${Platform.pathSeparator}$name');
     if (!outputFile.existsSync()) {
       outputFile.createSync(recursive: true);
@@ -60,23 +61,32 @@ class _CategoryPageState extends State<CategoryPage> {
     }
     return outputFile;
   }
+  double imageDownloadProgress = 0;
   Future<bool> downloadAllImages(List<String> imageUrls) async {
+    int i=1;
     for (var url in imageUrls) {
       var fileExist = false;
       var name = "";
-      if (Platform.isAndroid) {
-        var dir = await getExternalStorageDirectory();
-        var name = url.replaceAll("/", "").replaceAll(" ", "")
+
+        name = url.replaceAll("/", "").replaceAll(" ", "")
             .replaceAll("?", "").replaceAll("%", "")
             .replaceAll(":", "")
             .replaceAll("#", "");
-        var imagePath = (dir?.path ?? "") + Platform.pathSeparator + "cache" +
-            Platform.pathSeparator + name;
-        fileExist = await File(imagePath).exists();
-        print("images file exist: " + fileExist.toString());
-      } else {
-        fileExist = false;
-      }
+
+
+    if (Platform.isAndroid) {
+        var dir = await getExternalStorageDirectory();
+      var imagePath = (dir?.path ?? "") + Platform.pathSeparator + "cache" +
+          Platform.pathSeparator + name;
+      fileExist = await File(imagePath).exists();
+    } else if(Platform.isIOS) {
+      String tempDir = (await getApplicationDocumentsDirectory()).path;
+      File outputDirectory = File('$tempDir${Platform.pathSeparator}${'cache'}');
+      File outputFile = File('${outputDirectory.path}${Platform.pathSeparator}$name');
+      fileExist = await outputFile.exists();
+    }
+
+
       if (!fileExist) {
         try {
           if (Platform.isAndroid) {
@@ -85,17 +95,18 @@ class _CategoryPageState extends State<CategoryPage> {
                   ..subDirectory(name)
                   ..inExternalFilesDir()
             );
+
           } else if(Platform.isIOS) {
-            print("ios downloading image");
              File imageFile = await _downloadFile(url);
-
-
-            print(imageFile.path);
           }
         } catch (error) {
           print(error);
         }
       }
+      setState(() {
+        imageDownloadProgress = ((100/imageUrls.length) * i) / 100;
+      });
+      i++;
     }
     return true;
   }
@@ -182,8 +193,26 @@ class _CategoryPageState extends State<CategoryPage> {
   Container makeBody(BuildContext context) => Container(
     color: Colors.white,
       child: StreamBuilder<List<catego.Category>> ( stream: widget.categoryDao.getAllCategoriesAsStream(), builder: (_, snapshot) {
-  if (!imagesDownloaded) return Center(child: Text("အင်တာနက် မလိုဘဲ အသုံးပြုနိုင်ရန်\n ပြင်ဆင်နေပါသည်။", style: TextStyle(fontSize: 20), textAlign: TextAlign.center,));
-  else {
+  if (!imagesDownloaded) return
+
+
+  Column(
+      mainAxisSize: MainAxisSize.max,
+      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+    Text("အင်တာနက် မလိုဘဲ အသုံးပြုနိုင်ရန်\n ပြင်ဆင်နေပါသည်။", style: TextStyle(fontSize: 20), textAlign: TextAlign.center,),
+  new Padding(
+  padding: EdgeInsets.fromLTRB(10, 0, 10, 0),
+      child:LinearPercentIndicator(
+                width: MediaQuery.of(context).size.width-20,
+                lineHeight: 12.0,
+                percent: imageDownloadProgress,
+                backgroundColor: Colors.white70,
+                progressColor: Colors.blue,
+              ))
+        ,]);
+  else {                        //
   final data = snapshot.requireData;
   return GridView.builder(
         padding: EdgeInsets.fromLTRB(20, MediaQuery.of(context).size.height/(4/0.75), 20, 0),

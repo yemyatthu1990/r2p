@@ -22,7 +22,7 @@ Future<void> main() async {
   final categoryDao = appDatabase.categoryDao;
   final subCategoryDao = appDatabase.subCategoryDao;
   final detailDao = appDatabase.detailDao;
-  if (Firebase.apps.isEmpty) {
+  try{
     app = await Firebase.initializeApp(
       name: 'db2',
       options: Platform.isIOS || Platform.isMacOS
@@ -42,7 +42,7 @@ Future<void> main() async {
           databaseURL: 'https://myanmar-emergency-default-rtdb.firebaseio.com'
       ),
     );
-  } else {
+  } catch (e){
       app = Firebase.app('db2');
   }
   runApp(MaterialApp(
