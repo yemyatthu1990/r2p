@@ -47,7 +47,7 @@ Future<void> main() async {
   }
   runApp(MaterialApp(
     debugShowCheckedModeBanner: false,
-    title: 'Flutter Database Example',
+    title: 'SRF21',
     home: CategoryPage( app: app, categoryDao: categoryDao, subCategoryDao: subCategoryDao, detailDao: detailDao),
   ));
 }
